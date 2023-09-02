@@ -546,6 +546,22 @@ bool mpt_eval(const mpt_model & model, const int n_threads, const int n_past,
             struct ggml_tensor * Kcur = ggml_view_2d(ctx0, cur, n_embd, N, cur->nb[1], 1 * sizeof(float) * n_embd);
             struct ggml_tensor * Vcur = ggml_view_2d(ctx0, cur, n_embd, N, cur->nb[1], 2 * sizeof(float) * n_embd);
 
+            // Difference between MPT 1B and MPT 7B
+            //query = self.q_ln(query).to(dtype)
+            {
+                Qcur = ggml_norm(ctx0, Qcur, eps);
+
+                Qcur = ggml_mul(ctx0, ggml_repeat(ctx0, model.layers[il].c_attn_q_ln_weight, Qcur), Qcur);
+            }
+            //key = self.k_ln(key).to(dtype)
+            {
+                Kcur = ggml_norm(ctx0, Kcur, eps);
+
+                Kcur = ggml_mul(ctx0, ggml_repeat(ctx0, model.layers[il].c_attn_k_ln_weight, Kcur), Kcur);
+            }
+            // Difference ends
+
+            
             // store key and value to memory
             {
                 struct ggml_tensor * k =
